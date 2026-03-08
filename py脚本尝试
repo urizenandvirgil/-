@@ -1,0 +1,48 @@
+import requests
+import time
+
+UID = "175747"
+BASE_API_URL = f"https://api.bilibili.com/x/space/wbi/arc/search?mid={UID}&ps=50"
+HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+    'Referer': f'https://space.bilibili.com/{UID}'
+}
+
+def fetch_all_video_titles():
+    all_titles = []
+    page = 1
+    print("开始获取所有视频标题，请稍候...")
+
+    while True:
+        try:
+            url = f"{BASE_API_URL}&pn={page}"
+            response = requests.get(url, headers=HEADERS, timeout=10)
+            data = response.json()
+
+            if data.get('code') == 0:
+                videos = data['data']['list']['vpaid']['vlist']
+                if not videos:
+                    break
+
+                for video in videos:
+                    title = video['title']
+                    all_titles.append(title)
+                    print(f"第 {len(all_titles)} 个: {title}")  
+
+                print(f"已完成第 {page} 页，共 {len(videos)} 条")
+                if len(videos) < 50:
+                    break
+                else:
+                    page += 1
+                    time.sleep(1)
+            else:
+                print(f"API错误: {data.get('message')}")
+                break
+        except Exception as e:
+            print(f"请求出错: {e}")
+            break
+
+    print(f"\n抓取完成！总共 {len(all_titles)} 个视频标题。")
+
+if __name__ == "__main__":
+    fetch_all_video_titles()
